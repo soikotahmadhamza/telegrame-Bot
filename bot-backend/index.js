@@ -1,17 +1,20 @@
-// dotenv-এর জন্য সঠিক পদ্ধতি
-require('dotenv').config(); 
+require('dotenv').config();
+const express = require('express');
+const bot = require("./src/bot/bot"); // আপনার bot.js এর পাথ
 
-const connectDB = require("./src/config/db");
-const bot = require("./src/bot/bot");
-const server = require("./src/server/server");
+const app = express();
+app.use(express.json());
 
-(async () => {
+// Webhook endpoint
+app.post(`/webhook/${process.env.BOT_TOKEN}`, async (req, res) => {
   try {
-    await connectDB();
-    bot.launch();
-    server();
-    console.log("Bot Running...");
-  } catch (error) {
-    console.error("Failed to start the bot:", error);
+    await bot.handleUpdate(req.body, res);
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error');
   }
-})();
+});
+
+// Vercel এর জন্য এক্সপোর্ট
+module.exports = app;
